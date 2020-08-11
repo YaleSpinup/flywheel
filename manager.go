@@ -76,7 +76,7 @@ func (m *Manager) Start(ctx context.Context, t *Task) error {
 		}
 	}()
 
-	t.Status = "running"
+	t.Status = STATUS_RUNNING
 	key := m.namespace + ":tasks:" + t.ID
 
 	if err = m.redis.HSet(ctx, key, t.taskToMapString()).Err(); err != nil {
@@ -177,7 +177,7 @@ func (m *Manager) Complete(ctx context.Context, id string) error {
 		return fmt.Errorf("task hash key %s doesn't exist!", key)
 	}
 
-	if err := m.redis.HSet(ctx, key, "completed_at", complete, "status", "completed").Err(); err != nil {
+	if err := m.redis.HSet(ctx, key, "completed_at", complete, "status", STATUS_COMPLETED).Err(); err != nil {
 		log.Errorf("failed to set hash values %s: %s", key, err)
 		return err
 	}
@@ -205,7 +205,7 @@ func (m *Manager) Fail(ctx context.Context, id, message string) error {
 		return fmt.Errorf("task hash key %s doesn't exist!", key)
 	}
 
-	if err := m.redis.HSet(ctx, key, "failed_at", failed, "status", "failed", "failure", message).Err(); err != nil {
+	if err := m.redis.HSet(ctx, key, "failed_at", failed, "status", STATUS_FAILED, "failure", message).Err(); err != nil {
 		log.Errorf("failed to set hash values %s: %s", key, err)
 		return err
 	}

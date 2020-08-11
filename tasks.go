@@ -4,6 +4,13 @@ import (
 	"time"
 )
 
+const (
+	STATUS_COMPLETED = "completed"
+	STATUS_CREATED   = "created"
+	STATUS_FAILED    = "failed"
+	STATUS_RUNNING   = "running"
+)
+
 // Task is the detail about a task
 type Task struct {
 	CheckinAt   string   `json:"checkin_at,omitempty"`
@@ -20,7 +27,7 @@ func NewTask() *Task {
 	return &Task{
 		CreatedAt: time.Now().UTC().Format(time.RFC3339Nano),
 		ID:        NewID(),
-		Status:    "created",
+		Status:    STATUS_CREATED,
 	}
 }
 
