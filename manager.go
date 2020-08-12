@@ -2,6 +2,7 @@ package flywheel
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -23,15 +24,115 @@ type Manager struct {
 	namespace string
 	redis     *redis.Client
 	ttl       time.Duration
+
+	redisAddress  string
+	redisDatabase int
+	redisUsername string
+	redisPassword string
+	redisPing     bool
 }
 
+type ManagerOption func(*Manager)
+
 // NewManager creates a new manager instance used to communicate with the redis storage engine
-func NewManager(namespace string, ttl time.Duration, client *redis.Client) *Manager {
-	return &Manager{
+func NewManager(namespace string, opts ...ManagerOption) (*Manager, error) {
+	if namespace == "" {
+		return nil, errors.New("namespace is required")
+	}
+
+	log.Infof("creating new flywheel manager with namespace %s", namespace)
+
+	// setup the manager with some default options
+	m := Manager{
 		id:        NewID(),
 		namespace: namespace,
-		redis:     client,
-		ttl:       ttl,
+		ttl:       60 * time.Minute,
+
+		redisAddress:  "127.0.0.1:6379",
+		redisDatabase: 0,
+		redisUsername: "",
+		redisPassword: "",
+		redisPing:     true,
+	}
+
+	for _, opt := range opts {
+		opt(&m)
+	}
+
+	if m.redis == nil {
+		rdb := redis.NewClient(&redis.Options{
+			Addr:     m.redisAddress,
+			Username: m.redisUsername,
+			Password: m.redisPassword,
+			DB:       m.redisDatabase,
+		})
+
+		m.redis = rdb
+	}
+
+	if m.redisPing {
+		if err := m.redis.Ping(context.Background()).Err(); err != nil {
+			return nil, fmt.Errorf("failed to ping redis for new flywheel manager: %s", err)
+		}
+	}
+
+	return &m, nil
+}
+
+// WithTTL sets the amount of time a job will linger in the persistence layer (redis) after the last check-in, log message,
+// completion or failure.  This sets a TTL on the redis keys used by the library.
+func WithTTL(ttl time.Duration) ManagerOption {
+	return func(m *Manager) {
+		log.Debugf("setting ttl to %s", ttl.String())
+		m.ttl = ttl
+	}
+}
+
+// WithRedis sets the redis client to support advanced options
+func WithRedis(client *redis.Client) ManagerOption {
+	return func(m *Manager) {
+		log.Debug("setting redis client")
+		m.redis = client
+	}
+}
+
+// WithRedisAddress sets the address for redis in the form <ipaddress|hostname>:<port>.  This will be ignored if WithRedis() is passed.
+func WithRedisAddress(address string) ManagerOption {
+	return func(m *Manager) {
+		log.Debugf("setting redis address to %s", address)
+		m.redisAddress = address
+	}
+}
+
+// WithRedisDatabase sets the redis database to be used.  This will be ignored if WithRedis() is passed.
+func WithRedisDatabase(db int) ManagerOption {
+	return func(m *Manager) {
+		log.Debugf("setting redis database to %d", db)
+		m.redisDatabase = db
+	}
+}
+
+// WithRedisUsername sets the redis username to be used.  This will be ignored if WithRedis() is passed.
+func WithRedisUsername(username string) ManagerOption {
+	return func(m *Manager) {
+		log.Debugf("setting redis username to %s", username)
+		m.redisUsername = username
+	}
+}
+
+// WithRedisPassword sets the redis password to be used.  This will be ignored if WithRedis() is passed.
+func WithRedisPassword(password string) ManagerOption {
+	return func(m *Manager) {
+		log.Debug("setting redis password")
+		m.redisPassword = password
+	}
+}
+
+// WithoutRedisPing disables the initial redis ping check
+func WithoutRedisPing() ManagerOption {
+	return func(m *Manager) {
+		log.Debug("disabling the redis ping check")
+		m.redisPing = false
 	}
 }
 

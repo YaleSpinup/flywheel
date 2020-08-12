@@ -33,22 +33,29 @@ go get github.com/YaleSpinup/flywheel
 go get github.com/go-redis/redis/v8
 ```
 
-**Note:** We may abstract the redis library in future releases.
+The manager allows passing option functions to override the redis connection information and other configuration
+items.  Some examples of creating a manager are below, see the godoc for all of the available options.
 
-### Create a redis client and flywheel manager that can be shared by multiple tasks
+### Create a default flywheel manager that can be shared by multiple tasks
+
+```golang
+    // create a new manager with the namespace using the default values
+    manager, _ := flywheel.NewManager("testtesttest")
+```
+
+### Create a flywheel manager with a custom redis client
 
 ```golang
     rdb := redis.NewClient(&redis.Options{
-        Addr:     "127.0.0.1:6379",
-        Password: "",
-        DB:       0,
+        Addr:     "redis-server.intha.cloud:6379",
+        Username: "johnnyjohnny",
+        Password: "yesspapa!",
+        DB:       123,
+        PoolSize: 3,
     })
 
-    pong, err := rdb.Ping(ctx).Result()
-    log.Infof(pong, err)
-
-    // create a new manager with the namespace, the time to keep tasks in redis and the redis client
-    manager := flywheel.NewManager("testtesttest", 60*time.Minute, rdb)
+    // create a new manager with the namespace using the default values
+    manager, _ := flywheel.NewManager("testtesttest", WithRedis(rdb))
 ```
 
 ### Create a new task and start it
@@ -95,7 +102,7 @@ go get github.com/go-redis/redis/v8
 
 ### Get the task details
 
-Although the manager should be safe to use concurrently, this doesn't need to use the same instance of the manager as long as the namespace is the same.
+The manager getting task details doesn't need to use the same instance of the manager as long as the namespace is the same.
 
 ```golang
     ctx := context.Background()
