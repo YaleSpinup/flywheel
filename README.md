@@ -120,6 +120,12 @@ The manager getting task details doesn't need to use the same instance of the ma
     log.Infof("%s", string(j))
 ```
 
+### Use the built-in http handler
+
+```golang
+    api.Handle("/flywheel", s.flywheel.Handler())
+```
+
 ## Todo
 
 * A task reaper running on the manager to check for tasks that have been running too long and mark them as failed so upstream systems can get
