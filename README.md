@@ -1,5 +1,9 @@
 # flywheel
 
+[![license](https://img.shields.io/github/license/YaleSpinup/flywheel)](https://opensource.org/licenses/AGPL-3.0)
+[![go-mod](https://img.shields.io/github/go-mod/go-version/YaleSpinup/flywheel)](https://github.com/YaleSpinup/flywheel)
+[![go-doc](https://godoc.org/github.com/YaleSpinup/flywheel?status.svg)](http://godoc.org/github.com/YaleSpinup/flywheel)
+
 Flywheel is a task observability library for Spinup Go APIs.  Many of our APIs must handle asynchronous tasks
 and this is done in a variety of ways that are less than ideal.
 
