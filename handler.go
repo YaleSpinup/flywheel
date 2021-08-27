@@ -42,7 +42,7 @@ func (m *Manager) Handler() http.Handler {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusAccepted)
+		w.WriteHeader(http.StatusOK)
 		w.Write(j)
 	})
 }
