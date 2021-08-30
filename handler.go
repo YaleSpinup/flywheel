@@ -22,14 +22,16 @@ func (m *Manager) Handler() http.Handler {
 
 		log.Debugf("getting taskids %+v", taskids)
 
-		tasks := make(map[string]*Task, len(taskids))
+		tasks := make(map[string]*Task)
 		for _, id := range taskids {
 			task, err := m.GetTask(r.Context(), id)
 			if err != nil {
 				handleError(w, err)
 			}
 
-			tasks[id] = task
+			if task != nil {
+				tasks[id] = task
+			}
 		}
 
 		j, err := json.Marshal(tasks)
@@ -40,7 +42,7 @@ func (m *Manager) Handler() http.Handler {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusAccepted)
+		w.WriteHeader(http.StatusOK)
 		w.Write(j)
 	})
 }

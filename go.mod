@@ -1,6 +1,6 @@
 module github.com/YaleSpinup/flywheel
 
-go 1.14
+go 1.16
 
 require (
 	github.com/YaleSpinup/apierror v0.1.0

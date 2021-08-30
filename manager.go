@@ -146,6 +146,11 @@ func (m *Manager) GetTask(ctx context.Context, id string) (*Task, error) {
 		return nil, err
 	}
 
+	if len(hout) == 0 {
+		log.Warnf("task not found with id %s", id)
+		return nil, nil
+	}
+
 	task := &Task{}
 	if err := task.mapToTask(hout, []string{}); err != nil {
 		return nil, err
