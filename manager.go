@@ -2,6 +2,7 @@ package flywheel
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"time"
@@ -24,6 +25,7 @@ type Manager struct {
 	namespace string
 	redis     *redis.Client
 	ttl       time.Duration
+	tls       *tls.Config
 
 	redisAddress  string
 	redisDatabase int
@@ -47,6 +49,7 @@ func NewManager(namespace string, opts ...ManagerOption) (*Manager, error) {
 		id:        NewID(),
 		namespace: namespace,
 		ttl:       60 * time.Minute,
+		tls:       nil,
 
 		redisAddress:  "127.0.0.1:6379",
 		redisDatabase: 0,
@@ -61,10 +64,11 @@ func NewManager(namespace string, opts ...ManagerOption) (*Manager, error) {
 
 	if m.redis == nil {
 		rdb := redis.NewClient(&redis.Options{
-			Addr:     m.redisAddress,
-			Username: m.redisUsername,
-			Password: m.redisPassword,
-			DB:       m.redisDatabase,
+			Addr:      m.redisAddress,
+			Username:  m.redisUsername,
+			Password:  m.redisPassword,
+			DB:        m.redisDatabase,
+			TLSConfig: m.tls,
 		})
 
 		m.redis = rdb
@@ -85,6 +89,13 @@ func WithTTL(ttl time.Duration) ManagerOption {
 	return func(m *Manager) {
 		log.Debugf("setting ttl to %s", ttl.String())
 		m.ttl = ttl
+	}
+}
+
+func WithTLS(tls *tls.Config) ManagerOption {
+	return func(m *Manager) {
+		log.Debugf("setting tls to TLS: %+v", tls)
+		m.tls = tls
 	}
 }
 
